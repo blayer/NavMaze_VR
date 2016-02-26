@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Cardboard Example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+      body {
+        margin: 0px;
+        overflow: hidden;
+      }
+      #example {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="example"></div>
+
+  <script src="js/third-party/threejs/three.js"></script>
+  <script src="js/third-party/threejs/StereoEffect.js"></script>
+  <script src="js/third-party/threejs/DeviceOrientationControls.js"></script>
+  <script src="js/third-party/threejs/OrbitControls.js"></script>
+  <script src="maze.js"></script>
+
+  <script>
+    var camera, scene, renderer;
+    var effect, controls;
+    var element, container;
+	var cameraRotation;
+
+    var clock = new THREE.Clock();
+
+    init();
+    animate();
+
+    function init() {
+      renderer = new THREE.WebGLRenderer();
+      element = renderer.domElement;
+      container = document.getElementById('example');
+      container.appendChild(element);
+
+      effect = new THREE.StereoEffect(renderer);
+
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+      camera.position.set(-800,600, -50);
+      scene.add(camera);
+	  cameraRotation=camera.rotation.y;  
+
+      controls = new THREE.OrbitControls(camera, element);
+      controls.rotateUp(Math.PI / 4);
+      controls.target.set(
+        camera.position.x + 0.1,
+        camera.position.y,
+        camera.position.z
+      );
+      controls.noZoom = true;
+      controls.noPan = true;
+
+      function setOrientationControls(e) {
+        if (!e.alpha) {
+          return;
+        }
+
+        controls = new THREE.DeviceOrientationControls(camera, true);
+        controls.connect();
+        controls.update();
+
+        element.addEventListener('click', fullscreen, false);
+
+        window.removeEventListener('deviceorientation', setOrientationControls, true);
+      }
+      window.addEventListener('deviceorientation', setOrientationControls, true);
+
+  	var light = new THREE.AmbientLight( 0xFFFFFF );
+	
+  	            scene.add( light );
+   
+  		var maze = new Maze( 17, 17, 1000 );
+  		maze.paint();
+  		scene.add(maze);
+
+      window.addEventListener('resize', resize, false);
+      setTimeout(resize, 1);
+    }
+
+    function resize() {
+      var width = container.offsetWidth;
+      var height = container.offsetHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(width, height);
+      effect.setSize(width, height);
+    }
+
+    function update(dt) {
+      resize();
+
+      camera.updateProjectionMatrix();
+
+      controls.update(dt);
+    }
+
+    function render(dt) {
+      effect.render(scene, camera);
+    }
+
+	var angle;
+	var movementVec = new THREE.Vector3( 0, 0, 0 );
+	var movementVecRL = new THREE.Vector3( 0, 0, 0 );
+
+    function animate(t) {
+      requestAnimationFrame(animate);
+
+      update(clock.getDelta());
+      render(clock.getDelta());
+	  
+	  var moving = false;
+	  if(moving)
+ 	   { angle = Math.PI / 2 + camera.rotation.y;
+ 		 movX = -0 * Math.cos( angle );
+ 		 movZ = 0* Math.sin( angle );
+ 	     cameraRotation=camera.rotation.y;
+ 		camera.position.x -= movX;
+ 		camera.position.z -=movY ;}
+		
+
+    }
+
+    function fullscreen() {
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
+      } else if (container.mozRequestFullScreen) {
+        container.mozRequestFullScreen();
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      }
+    }
+  </script>
+  </body>
+</html>
